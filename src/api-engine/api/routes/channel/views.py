@@ -4,6 +4,7 @@
 from copy import deepcopy
 import logging
 import json
+import time
 
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -150,6 +151,8 @@ class ChannelViewSet(viewsets.ViewSet):
                 ConfigTX(org.network.name).create(name, org.network.consensus, _orderers, _peers)
                 ConfigTxGen(org.network.name).genesis(profile=name, channelid=name, outputblock="{}.block".format(name))
 
+                time.sleep(3) # wait for genesis block to be created
+
                 # osnadmin channel join
                 ordering_node = Node.objects.get(id=orderers[0])
                 envs = init_env_vars(ordering_node, org)
@@ -161,6 +164,8 @@ class ChannelViewSet(viewsets.ViewSet):
                     block_path="{}/{}/{}.block".format(
                         CELLO_HOME, org.network.name, name)
                 )
+
+                time.sleep(3) # wait for channel to be created
 
                 # peer channel join
                 for i in range(len(peers)):
@@ -414,12 +419,11 @@ def init_env_vars(node, org):
     elif(node.type == "peer"):
         envs = {
             "CORE_PEER_TLS_ENABLED": "true",
-            "CORE_PEER_LOCALMSPID": "{}MSP".format(org_name.capitalize()),
+            "CORE_PEER_LOCALMSPID": "{}MSP".format(org_name.split(".")[0].capitalize()),
             "CORE_PEER_TLS_ROOTCERT_FILE": "{}/{}/peers/{}/tls/ca.crt".format(dir_node, org_name, node.name + "." + org_name),
             "CORE_PEER_MSPCONFIGPATH": "{}/{}/users/Admin@{}/msp".format(dir_node, org_name, org_name),
             "CORE_PEER_ADDRESS": "{}:{}".format(
                 node.name + "." + org_name, str(7051)),
-
             "FABRIC_CFG_PATH": "{}/{}/peers/{}/".format(dir_node, org_name, node.name + "." + org_name)
         }
 
