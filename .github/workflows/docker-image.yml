@@ -19,14 +19,14 @@ jobs:
         run: |
           MODE=dev make start
           sleep 10
-      - name: Run API integration tests
+      - name: Run newman tests
         run: |
           make check-api
       - name: Stop services
         if: always()
         run: |
           MODE=dev make stop
-      - name: Clean up containers and images
+      - name: Clean up
         if: always()
         run: |
           make clean
